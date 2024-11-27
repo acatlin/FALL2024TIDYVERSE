@@ -59,3 +59,17 @@ head(pool_by_bro_type_mean)
 
 
 ```
+
+## Split groups into new dataframes
+
+You can split a dataframe into multiple dataframes using `dplyr::group_split()`. This is useful when you want to breakdown very large data into meaningful chunks, such as business units.
+
+```{r split_group}
+# Creating a grouped dataframe
+
+pool_by_bro_type <- pools_df %>% group_by(borough,pooltype) %>% summarize(pool_count=n())
+head(pool_by_bro_type)
+
+# Splitting it into a list of dataframes
+group_split(pool_by_bro_type)
+```
