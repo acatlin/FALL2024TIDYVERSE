@@ -1,0 +1,206 @@
+---
+title: "Tidyverse-Denier"
+author: "Tiffany Hugh"
+date: "2024-11-12"
+output: html_document
+---
+
+**Overview**
+
+This vignette demonstrates the effective use of mutate() and case_when() from the dplyr package to streamline multiple conditional transformations into a single, readable function. This approach is especially useful for recoding responses or creating custom categories from exisitng data. Additionally, group_by, summarize, and arrange is is utilized to perform efficient pattern matching and data aggregation. For visualization, the ggplot2 package is employed to create informative and customizable plots.
+
+The goal of this vignette is to showcase how Tidyverse functions can simplify and enhance both data manipulation workflows and visualization processes, making data analysis more efficient and accessible.
+
+**Source**
+
+The data used in this vignette comes from a dataset compiled by FiveThirtyEight, which includes the views of every Republican candidate running for Senate, House, governor, attorney general, and secretary of state in the 2022 general election regarding the legitimacy of the 2020 presidential election.
+
+**Packages and Libraries**
+
+Tidyverse encompasses all necessary libraries: dplyr, tidyr,and readr. ggplot2 is also needed.
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("tidyverse")
+#intsall.packages("ggplot2")
+library(dplyr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+```
+
+**Import Data**
+
+```{r setup1, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+election_deniers <- read_csv("fivethirtyeight_election_deniers.csv")
+View(election_deniers)
+```
+
+**mutate,case_when,group_by,& arrange**
+
+The mutate() function from the dplyr package is used to modify the dataset by adding the Stance_Category column. Inside mutate(), case_when() is applied to map specific responses from the Stance column to these broader categories. For example, responses like "Fully denied" and "Fully accepted" are mapped directly to their respective categories, while responses like "Raised questions" and "Accepted with reservations" are grouped under the "Questioned/Reserved" category. This method helps to consolidate responses and makes it easier to analyze patterns in stances.
+
+Next, group_by() groups the data by State and Stance_Category, and summarize() to count how many responses fall into each group. The .groups = "drop" argument ensures that the result is returned as a data frame instead of a grouped tibble. Finally, arrange() to sort the data by State and count in descending order to quickly see the most common stance in each state.
+
+```{r setup2, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+deniers <- election_deniers %>%
+  mutate(
+    Stance_Category = case_when(
+      Stance == "Fully denied" ~ "Fully denied",
+      Stance == "Fully accepted" ~ "Fully accepted",
+      Stance %in% c("Raised questions", "Accepted with reservations") ~ "Questioned/Reserved",
+      Stance %in% c("Avoided answering", "No comment") ~ "No Comment",
+      TRUE ~ Stance 
+    )
+  ) %>%
+  group_by(State, Stance_Category) %>%
+  summarize(count = n(), .groups = "drop") %>%
+  arrange(State, desc(count))
+
+deniers
+```
+
+**ggplot2**
+
+A stacked bar plot is ideal for visualizing election stances by state. Since there are 50 states, the x-axis would be too crowded, so the data is split into two subsets by alphabetical order. The ggplot() function maps state names (State) to the x-axis and the count of responses (count) to the y-axis. The fill aesthetic differentiates the stance categories (Stance_Category) by color.
+
+For both plots, geom_bar(stat = "identity") creates a bar chart where the height of each bar corresponds to the count value. This approach improves readability while providing a clear view of stances across states.
+
+```{r setup3, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+
+half1 <- deniers[1:(nrow(deniers) / 2), ]
+half2 <- deniers[(nrow(deniers) / 2 + 1):nrow(deniers), ]
+
+#first half
+ggplot(half1, aes(x = State, y = count, fill = Stance_Category)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Comparison of Election Stances (First Half of States)",
+    x = "State",
+    y = "Count",
+    fill = "Stance Category"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set1")
+
+#second half
+ggplot(half2, aes(x = State, y = count, fill = Stance_Category)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Comparison of Election Stances (Second Half of States)",
+    x = "State",
+    y = "Count",
+    fill = "Stance Category"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set1")
+
+```
+
+**Conclusion**
+
+This vignette demonstrated how to effectively categorize and visualize election stances using dplyr for data manipulation and ggplot2 for visualization.
+
+**-----Extend TidyVerse Assignment-----**
+
+This example is extending the use of the mutate() and case_when() functions from the dyplr package to demonstrate data manipulation and transformation and creating additional visualzations using ggplot2.
+
+***In this example, we add a Region column to group states into broader geographical categories. Then, we use this information to analyze and visualize stances by region.***
+
+```{r}
+deniers_extended <- election_deniers %>%
+  mutate(
+    Stance_Category = case_when(
+      Stance == "Fully denied" ~ "Fully denied",
+      Stance == "Fully accepted" ~ "Fully accepted",
+      Stance %in% c("Raised questions", "Accepted with reservations") ~ "Questioned/Reserved",
+      Stance %in% c("Avoided answering", "No comment") ~ "No Comment",
+      TRUE ~ Stance 
+    ),
+    Region = case_when(
+      State %in% c("California", "Oregon", "Washington", "Nevada") ~ "West",
+      State %in% c("New York", "Massachusetts", "Connecticut", "New Jersey") ~ "Northeast",
+      State %in% c("Texas", "Florida", "Georgia", "North Carolina") ~ "South",
+      State %in% c("Illinois", "Michigan", "Ohio", "Wisconsin") ~ "Midwest",
+      TRUE ~ "Other"
+    )
+  ) %>%
+  group_by(Region, Stance_Category) %>%
+  summarize(count = n(), .groups = "drop") %>%
+  arrange(Region, desc(count))
+
+deniers_extended
+```
+**Using the extended dataset, we visualize stance categories by region using a faceted bar chart and a proportion chart**
+
+```{r}
+# Faceted Bar Chart
+ggplot(deniers_extended, aes(x = Region, y = count, fill = Stance_Category)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Election Stances by Region",
+    x = "Region",
+    y = "Count",
+    fill = "Stance Category"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set2")
+
+# Proportion Chart
+deniers_proportion <- deniers_extended %>%
+  group_by(Region) %>%
+  mutate(percentage = count / sum(count) * 100)
+
+ggplot(deniers_proportion, aes(x = Region, y = percentage, fill = Stance_Category)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Proportion of Election Stances by Region",
+    x = "Region",
+    y = "Percentage",
+    fill = "Stance Category"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set3")
+```
+
+Pivot data to a wide format for comparison of stance counts across categories within each region.
+
+```{r}
+library(tidyr)
+
+deniers_wide <- deniers_extended %>%
+  pivot_wider(
+    names_from = Stance_Category,
+    values_from = count,
+    values_fill = 0
+  )
+
+deniers_wide
+```
+
+Alternate visualization of regions and stances using a Heat Map 
+```{r}
+library(ggplot2)
+
+ggplot(deniers_extended, aes(x = Stance_Category, y = Region, fill = count)) +
+  geom_tile() +
+  labs(
+    title = "Heatmap of Election Stances by Region",
+    x = "Stance Category",
+    y = "Region",
+    fill = "Count"
+  ) +
+  theme_minimal() +
+  scale_fill_gradient(low = "white", high = "blue")
+```
+**This extension showcases how mutate() and case_when() can be used to derive meaningful insights, such as simplifying complex categories and enabling more targeted analyses. When combined with other Tidyverse functions, these tools streamline data transformations and provide clear visual narratives.**
