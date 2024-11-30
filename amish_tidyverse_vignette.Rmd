@@ -57,3 +57,29 @@ ggplot(rock_summary, aes(x = factor(shape_category), y = avg_area)) +
 
 # Conclusion
 In this example, I demonstrated how to use group_by and summarize to compute summary statistics for grouped data using the Tidyverse package. I also created a bar plot to visualize the average area across different shape categories.
+
+# Extension
+In this extension I will be showcasing a use of the ungroup() command in group_by statements. In this first example, we can see how the rocks dataset has been grouped by shape category, making the following summary metrics be split for each individual shape category. I.E. the avg_perm for a shape is dependent on it's shape category, givng the average perimeter for shapes in that group.
+
+```{r}
+rock_summary_grouped <- rock %>%
+  mutate(shape_category = round(shape, 1)) %>%  # Round to one decimal place
+  group_by(shape_category) %>%                 
+  mutate(avg_area = mean(area)) %>%
+  mutate(avg_perm = mean(perm))
+
+head(rock_summary_grouped)
+```
+
+Now we will call the ungroup() function before we calculate the avg_perm. This means the avg_perm variable is the average perimeter for the whole population, not just ones in a specific shape category. The avg_area is still the average area for the for the specific category since this occurs before the ungroup() function.
+
+```{r}
+rock_summary_ungrouped <- rock %>%
+  mutate(shape_category = round(shape, 1)) %>%  # Round to one decimal place
+  group_by(shape_category) %>%                 
+  mutate(avg_area = mean(area)) %>%
+  ungroup() %>%
+  mutate(avg_perm = mean(perm))
+
+head(rock_summary_ungrouped)
+```
