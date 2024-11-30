@@ -170,7 +170,8 @@ file name: DATA_607_Koon_Tidyverse_Extension.rmd
 Initial Description and Link:A vignette demonstrating the use of TidyVerse packages (`dplyr`, `ggplot2`, and `kable`) to analyze polling trends using FiveThirtyEight data on Donald Trump's polling percentages over time.
 Data607TidyVerse.Rmd
 
-Revision/Addition Description and Link:
+Revision/Addition Description and Link: 
+Created new dataset featuring total and average conumption rates by year to the file 'BW_Gather.RMD'. Created additional visualizations using ggplot and kable for cleaner visiblity. 
 
 
 # Alinzon Simon
