@@ -171,7 +171,7 @@ Initial Description and Link:A vignette demonstrating the use of TidyVerse packa
 Data607TidyVerse.Rmd
 
 Revision/Addition Description and Link: 
-Created new dataset featuring total and average conumption rates by year to the file 'BW_Gather.RMD'. Created additional visualizations using ggplot and kable for cleaner visiblity. 
+Created new dataset featuring total and average consumption rates by year to the file 'BW_Gather.RMD'. Created additional visualizations using ggplot and kable for cleaner visibility. 
 
 
 # Alinzon Simon
