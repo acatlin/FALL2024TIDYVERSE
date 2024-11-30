@@ -15,8 +15,9 @@ Revision/Addition Description and Link:
 Initial Description and Link: `group_by` and `summarize` tidyverse functions
 amish_tidyverse_vignette.rmd
 
-Revision/Addition Description and Link:
+Revision/Addition Description and Link: additional examples demonstrating data transformation and visualization through the use of mutate() and other dyplr functions. 
 
+dplyr+ggplot2-extended.Rmd
 
 # Anthony R.
 
