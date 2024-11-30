@@ -18,6 +18,10 @@ amish_tidyverse_vignette.rmd
 Revision/Addition Description and Link:
 * Modified amish_tidyverse_vignette.rmd to include an example of the ungroup() command
 * Extension begins on line 61
+=======
+Revision/Addition Description and Link: additional examples demonstrating data transformation and visualization through the use of mutate() and other dyplr functions. 
+
+dplyr+ggplot2-extended.Rmd
 
 # Anthony R.
 
@@ -62,7 +66,7 @@ Initial Description and Link:
 Revision/Addition Description and Link:
 - Extended the initial file `unnesting.Rmd` from tillmawitz
 - Around line 114 is where my extension begins.
-
+- Extended with `group_split()` from kevinhav
 
 
 # Julian A-N.
@@ -117,13 +121,15 @@ Revision/Addition Description and Link:
 
 Exploring how to work with nested data using `unnest()`
 
-Initial Description and Link:
+Initial Description and Link:\
 Nested data occurs when a cell of a dataframe contains a list or similar object. Properly unnesting can range from very simple to incredibly complicated, and we will explore a few examples and explain how to handle them using the `tidyr` package.
 
 [Click here to see the example!](unnesting.Rmd)
 
-Revision/Addition Description and Link:
+Revision/Addition Description and Link:\
+Extending the work done by [Kevin H.](#kevin-h) on the `across()` function we explore the similar `if_any()` and `if_all()` functions which can be used with the `filter()` function as well as `mutate()`. The `if_any()` and `if_all()` functions follow the same pattern as `across()` and can be used when conditional operations are desired.
 
+[Check out the extension here!](across_vignette.Rmd)
 
 # Tenzin D.
 
@@ -150,8 +156,13 @@ Revision/Addition Description and Link:
 
 Initial Description and Link:This vignette explores analyzing election deniers' stances by state, using mutate() and case_when() from dplyr for efficient conditional transformations and recoding. It also demonstrates group_by(), summarize(), and arrange() for data aggregation. ggplot2 is used for visualization.
 
+file name: dplyr+ggplot2.Rmd
+
 Revision/Addition Description and Link:
-dplyr+ggplot2.Rmd
+
+I expanded Kimberly K.'s vignette by incorporating visualizations using the ggplot2 package. These visualizations include a detailed breakdown of salary proportions by subdiscipline and an exploration of the relationship between salary and education level. The extension begins on line 10.
+
+file name: DATA_607_Koon_Tidyverse_Extension.rmd
 
 
 # Zachary R.
