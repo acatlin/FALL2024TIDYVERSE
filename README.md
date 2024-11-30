@@ -16,7 +16,8 @@ Initial Description and Link: `group_by` and `summarize` tidyverse functions
 amish_tidyverse_vignette.rmd
 
 Revision/Addition Description and Link:
-
+* Modified amish_tidyverse_vignette.rmd to include an example of the ungroup() command
+* Extension begins on line 61
 
 # Anthony R.
 
