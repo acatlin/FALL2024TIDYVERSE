@@ -149,8 +149,13 @@ Revision/Addition Description and Link:
 
 Initial Description and Link:This vignette explores analyzing election deniers' stances by state, using mutate() and case_when() from dplyr for efficient conditional transformations and recoding. It also demonstrates group_by(), summarize(), and arrange() for data aggregation. ggplot2 is used for visualization.
 
+file name: dplyr+ggplot2.Rmd
+
 Revision/Addition Description and Link:
-dplyr+ggplot2.Rmd
+
+I expanded Kimberly K.'s vignette by incorporating visualizations using the ggplot2 package. These visualizations include a detailed breakdown of salary proportions by subdiscipline and an exploration of the relationship between salary and education level. The extension begins on line 10.
+
+file name: DATA_607_Koon_Tidyverse_Extension.rmd
 
 
 # Zachary R.

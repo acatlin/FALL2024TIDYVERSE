@@ -1,0 +1,166 @@
+---
+title: "Data 607 Tidyverse Extension"
+author: "Kim Koon"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+### Load packages
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(sqldf)
+options(scipen=999)
+```
+
+### Overview / Introduction
+
+When creating outputs in SQL, I find myself using functions such as rank() over partition() and case when/then/end very frequently.  In this vignette, I will describe equivalents in tidyverse, using a Civil Engineering Salary survey sourced from the Civil Engineering subreddit.  The raw data can be found from the same github link below, and the pared down data can be downloaded from: 
+
+https://raw.githubusercontent.com/koonkimb/Data607/refs/heads/main/TidyVerse%20CREATE/CE_Salary.csv.  
+
+To reproduce the SQL portion of this assignment, data will need to be downloaded from the above link and the file path will need to be changed in SSMS to the local directory in which the above raw data is saved.  
+
+## Load/Transform Data
+
+After importing the data, I filter on select columns of interest and rename the columns to be less verbose.  I also export this table into a CSV file for later use in SQL server when looking at SQL equivalents.
+
+```{r load-data}
+CE_Salary <- read.csv("https://raw.githubusercontent.com/koonkimb/Data607/refs/heads/main/TidyVerse%20CREATE/2023_CE_Salary_Survey.csv", header = TRUE, sep = ",")
+CE_Salary <- CE_Salary %>% filter(Please.select.your.country. == 'United States of America') %>% select(What.state.do.you.work.in., Select.your.highest.level.of.education.attainment,Select.your.highest.level.of.professional.attainment..1, Which.best.describes.your.participation.in.the.Civil.Engineering.industry., Which.sub.discipline.do.you.work.in., Do.you.work.in.the.Public.or.Private.sector., What.is.your.current.annual.salary.) %>% rename(State = What.state.do.you.work.in., Education = Select.your.highest.level.of.education.attainment, Certification = Select.your.highest.level.of.professional.attainment..1, Partitipation = Which.best.describes.your.participation.in.the.Civil.Engineering.industry., Subdiscipline = Which.sub.discipline.do.you.work.in., Sector = Do.you.work.in.the.Public.or.Private.sector., Salary = What.is.your.current.annual.salary.)
+
+# write.table(CE_Salary, "C:\\Users\\Kim\\Documents\\GitHub\\Data607\\TidyVerse CREATE\\CE_Salary.csv", quote = FALSE, row.names = FALSE, sep = ";")
+```
+
+## SQL
+
+Imagine two scenarios where we would want to determine the highest reported salary by State, and determine whether a reported salary is lower or higher than the State average.  For scenario 2, since the dataset has over 2000 records, I will return only results from New York.
+
+To achieve the above aforementioned goals, I would use common table expressions.  I first create the CTE "stateRankedSalaries" to find the rank of each reported salary in comparison to other records for the state, sorted in descending order such that highest salaries are ranked first.  Then, I select from the CTE where the rank is equal to 1.  
+
+I then create a CTE "avgStateSalaries" to find the average salary grouped by State.  I select from this CTE and include a new column "Compare to Average" where if the avgStateSalary is greater than the Salary of the record, it returns "Under", if the avgStateSalary is less than the Salary of the record, it returns "Above", and if they are equal, it returns "Average".  The state is filtered to "New York" in the where clause.
+
+```{SQL, eval = FALSE}
+-- preventing table conflicts
+drop table if exists CE_Salary
+
+-- creating the table
+Create table CE_Salary (
+State varchar(50),
+Education varchar(50),
+Certification varchar(50),
+Participation varchar(50),
+Subdiscipline varchar(max),
+Sector varchar(50),
+Salary float)
+
+-- inserting the table from csv
+bulk insert CE_Salary from 'C:\Users\Kim\Documents\GitHub\Data607\TidyVerse CREATE\CE_Salary.csv' with (firstrow = 2, fieldterminator = ';', rowterminator = '\n');
+
+
+with stateRankedSalaries as (
+  select *, rank() over (partition by State order by cast(Salary as int) desc) as salaryRank from CE_Salary 
+)
+Select * from stateRankedSalaries where salaryRank = 1
+order by Salary desc;
+
+with avgStateSalaries as (
+	select *, avg(Salary) over (partition by State) as avgStateSalary from CE_Salary
+	)
+select *, case when avgStateSalary > Salary then 'Under' 
+				when avgStateSalary < Salary then 'Above'
+				when avgStateSalary = Salary then 'Average' end as 'Compare to Average'
+				from avgStateSalaries
+where State = 'New York'
+```
+
+To do the same in R, I first use the group_by() function to group by state, and then use mutate() with dense_rank() on the Salary in descending order using desc().  This combination of actions is the equivalent of rank() over (partition by State order by Salary desc) in SQL.  Then, I filter the dataset using filter() where the salaryRank is equal to 1, equivalent to the where clause in SQL.  I use arrange() to arrange the records in descending salary order, where arrange() is the equivalent to order by in SQL.
+
+More interesting is the case_when() function in R, which allows multiple if/else statements like case when in SQL.  Using mutate with case_when(), I can perform the exact same process as in SQL and create different if/else scenarios that return specified outputs.  
+
+```{r}
+stateRankedSalaries <- CE_Salary %>% group_by(State) %>% mutate(salaryRank = dense_rank(desc(Salary))) %>% filter(salaryRank == 1) %>% arrange(desc(Salary))
+print(stateRankedSalaries, n = 100)
+
+avgStateSalaries <- CE_Salary %>% group_by(State) %>% mutate(avgStateSalary = mean(Salary)) %>% 
+  mutate(CompareToAverage = case_when(avgStateSalary > Salary ~ "Under",
+                   avgStateSalary < Salary ~ "Above",
+                   avgStateSalary == Salary ~ "Average")) %>%
+  filter(State == "New York")
+print(avgStateSalaries, n = 150)
+```
+
+## Conclusion
+
+The tidyverse packages, specifically dplyr, have various functions that can be used to perform equivalent SQL actions in R.  
+
+
+________________________________Extension____________________________________________
+
+#ggplot2
+
+To build on Kim's vignette, I will create a visualization using the ggplot2 package. This chart will showcase the proportion of salaries that are above, below, or at the state average, categorized by subdiscipline. Using the group_by and summarize functions, I calculate the proportion of each comparison category (Above, Below, Average) within the dataset.Then, I use geom_bar to create side-by-side bars for easy comparison. I add colors with scale_fill_brewer (using the "Set1" palette) to make the chart visually clear. Finally, I use theme_minimal for a simple, clean look and rotate the axis labels so they’re easier to read.
+
+I am not well versed in SQL but if SQL was used to achieve the same visualization, it would focus on calculating the proportions for each "Subdiscipline" and "CompareToAverage" group using GROUP BY and aggregate functions. 
+
+
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+
+avgStateSalaries %>%
+  group_by(Subdiscipline, CompareToAverage) %>%
+  summarize(Proportion = n() / nrow(avgStateSalaries)) %>%
+  ggplot(aes(x = Subdiscipline, y = Proportion, fill = CompareToAverage)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_brewer(palette = "Set1") +
+  theme_minimal() +
+  labs(
+    title = "Proportion of Salaries Above/Below State Average by Subdiscipline",
+    x = "Subdiscipline",
+    y = "Proportion of Salaries"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Now, I want to explore the relationship between salary and education level. If SQL were used to explore the relationship between salary and education level, the lack of a built-in MEDIAN() function could pose a challenge. Instead, workarounds such as calculating the median manually using window functions or ranking rows would be required. This contrasts with R, where calculating the median is straightforward using summarize(median(Salary)).I used  ggplot2 to plot the median salary by education level, with reorder() to arrange education levels by median salary. While this plot is informative, it doesn't account for outliers, which can heavily influence salary distribution.
+
+
+```{r}
+avgStateSalaries %>%
+  group_by(Education) %>%
+  summarize(MedianSalary = median(Salary, na.rm = TRUE)) %>%
+  ggplot(aes(x = MedianSalary, y = reorder(Education, MedianSalary), color = Education)) +
+  geom_point(size = 4) +
+  theme_minimal() +
+  labs(
+    title = "Median Salary by Education Level",
+    x = "Median Salary",
+    y = "Education Level"
+  ) +
+  theme(legend.position = "none")
+```
+
+To address this, I ran an ANOVA, Analysis of Variance, to test if there are significant salary differences between education levels. This statistical test helps determine if education level significantly impacts salary.
+
+Next, I created a boxplot to visualize the distribution of salaries across education levels. The boxplot shows the median salary, the range, and highlights any outliers, providing a more complete view of the salary variation.
+```{r}
+anova_result <- aov(Salary ~ Education, data = avgStateSalaries)
+summary(anova_result)
+
+ggplot(avgStateSalaries, aes(x = Education, y = Salary)) +
+  geom_boxplot(fill = "purple", color = "black") +
+  labs(title = "Salary by Education Level", x = "Education Level", y = "Salary")
+
+
+```
+
+
+#Conclusion
+
+The tidyverse simplifies data processing and visualization, making it easy to uncover trends and relationships, offering clear insights into the dataset.
+
+
