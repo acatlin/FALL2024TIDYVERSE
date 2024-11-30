@@ -1,0 +1,100 @@
+---
+title: "BW_Gather"
+author: "Ben Wolin"
+date: "2024-11-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Demonstrating the Gather() functionality in tidyr
+Gather takes multiple columns and collapses into key-value pairs, duplicating all other columns as needed. You use gather() when you notice that you have columns that are not variables.
+
+## Pulling in an example from the word bank data catalog.
+https://energydata.info/dataset/world-climate-watch/resource/1631a4e8-a59a-4026-aa36-162df9b15340
+
+```{r}
+library(tidyr)
+Consumption_raw <- read.csv('https://raw.githubusercontent.com/bwolin99/TestRepo/refs/heads/main/606%20Final/Meat_Consumption.csv',row.names = NULL)
+head(Consumption_raw)
+```
+As we can see in this dataset there are many columns indicating the year in which the measurement was taken. We would like to group these years into one column and the total emissions into the other.
+
+## Grouping with Gather()
+```{r}
+Consumption <- gather(Consumption_raw, key = 'year', value = 'Meat_Consumption',2:28)
+head(Consumption)
+```
+
+Now we turned 28 columns into 3 using the Gather function.
+
+
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+# Removes the X prefix in the year column and converts values to numeric
+Consumption <- Consumption %>%
+  mutate(year = as.numeric(gsub("X", "", year)))
+```
+
+```{r}
+# Filters out rows with missing Meat_Consumption values
+Consumption <- Consumption %>%
+  filter(!is.na(Meat_Consumption))
+```
+
+Slight data transformation to allow for added visualization.
+
+```{r}
+# Creates new rows displaying total and average meat consumption per year across all countries
+summary_per_year <- Consumption %>%
+  group_by(year) %>%
+  summarize(
+    total_consumption = sum(Meat_Consumption, na.rm = TRUE),
+    average_consumption = mean(Meat_Consumption, na.rm = TRUE)
+  )
+
+```
+This code creates a new data set that combines consumption numbers of all countries by year to see both average and totals. 
+
+```{r}
+# Visualization of total meat consumption over the years
+ggplot(summary_per_year, aes(x = year, y = total_consumption)) +
+  geom_line(color = "blue", linewidth = 1) +
+  labs(
+    title = "Total Meat Consumption Over the Years",
+    x = "Year",
+    y = "Total Consumption"
+  ) +
+  theme_minimal()
+
+ggplot(summary_per_year, aes(x = year, y = average_consumption)) +
+  geom_line(color = "blue", linewidth = 1) +
+  labs(
+    title = "Average Meat Consumption Over the Years",
+    x = "Year",
+    y = "Average Consumption"
+  ) +
+  theme_minimal()
+
+```
+These visualizations allow us to see that both total and average consumption rates increase steadily throughout the years at the same pace. 
+
+```{r}
+library(kableExtra)
+
+# Displays the last ten years of data in a formatted HTML table using Kable package
+summary_per_year %>%
+  filter(year >= 2008 & year <= 2017) %>% # Select only rows for years 2008-2017
+  kable("html", caption = "Summary of Meat Consumption (2008-2017)") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+Using Kable, this code provides a cleaned look at the average and total numbers from the last ten yeras of the provided data. 
+
+
