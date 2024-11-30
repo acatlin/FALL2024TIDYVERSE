@@ -116,13 +116,15 @@ Revision/Addition Description and Link:
 
 Exploring how to work with nested data using `unnest()`
 
-Initial Description and Link:
+Initial Description and Link:\
 Nested data occurs when a cell of a dataframe contains a list or similar object. Properly unnesting can range from very simple to incredibly complicated, and we will explore a few examples and explain how to handle them using the `tidyr` package.
 
 [Click here to see the example!](unnesting.Rmd)
 
-Revision/Addition Description and Link:
+Revision/Addition Description and Link:\
+Extending the work done by [Kevin H.](#kevin-h) on the `across()` function we explore the similar `if_any()` and `if_all()` functions which can be used with the `filter()` function as well as `mutate()`. The `if_any()` and `if_all()` functions follow the same pattern as `across()` and can be used when conditional operations are desired.
 
+[Check out the extension here!](across_vignette.Rmd)
 
 # Tenzin D.
 

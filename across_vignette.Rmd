@@ -39,14 +39,15 @@ We can use `across()` in conjunction with `mutate()` to perform this operation.
 
 ```{r}
 # With across()
-df |> 
+ranked_trees <- df |> 
   mutate(
     across(
       .cols = everything(),    # Operate across all columns
-      .fns = rank,              # The function(s) to perform
+      .fns = rank,             # The function(s) to perform
       .names = "{.col}_rank"   # How the new columns should be named
     )
   )
+ranked_trees
 ```
 
 We can also specify what *type* of columns we would like to perform by replacing `everything()` with `starts_with()`. You could also use `is.character` or `is.numerical`, which is useful for things such as string normalization, rounding floats into integers, etc.
@@ -85,6 +86,60 @@ df |>
       .cols = where(is.numeric),  # Select all numeric columns
       .fns = ~ round(.x),         # Apply round() to each column
       .names = "{.col}_int"       # Create new columns with _int suffix
+    )
+  )
+```
+
+## Extending Tidy Operations Across Columns
+
+In addition to the `across()` function `dplyr` also has the `if_any()` and `if_all()` functions which operate very similarly to `across()`. As demonstrated above, `across()` can be used with the `mutate()` and by extension the `summarise()` and `reframe()` functions. Its behavior does not extend to the `filter()` function however, which is where `if_any()` and `if_all()` can help.
+
+```{r}
+# THIS WILL NOT WORK, INCLUDED FOR DEMONSTRATION ONLY
+# Uncomment the below code to see an example of the error that occurs when using across() in a filter() statement
+
+#df |> 
+#  filter(
+#    across(
+#      .cols = where(is.numeric), 
+#      .fns = ~ .x > 5,            
+#    )
+#  )
+```
+
+The `if_any()` and `if_all()` functions take all the same arguments as `across()` but return a logical vector which allows for filtering. The `if_any()` function will preserve all rows with at least one cell which meets the condition, whereas `if_all()` will only keep rows for which all cells meet the specified condition. Let's look at an example using the tree rankings we generated earlier.
+
+```{r}
+ranked_trees |> 
+  filter(
+    if_any(
+      .cols = contains("rank"),   # Only check the columns with "rank" in their name
+      .fns = ~ . <= 10            # Fetch the rows which are in the top 10 of ANY measure
+    )
+  )
+```
+
+Using `if_any()` we are able to get all the trees that are in the top 10 of EITHER `Girth_rank`, `Height_rank`, OR `Volume_rank`. If we perform the exact same operations but substitute `if_all()` for `if_any()` we get a much shorter list containing only the trees which are in the top 10 of ALL ranks.
+
+```{r}
+ranked_trees |> 
+  filter(
+    if_all(
+      .cols = contains("rank"),   # Only check the columns with "rank" in their name
+      .fns = ~ . <= 10            # Fetch the rows which are in the top 10 of ALL measures
+    )
+  )
+```
+
+You can still use `if_any()` and `if_all()` within functions like `mutate()` and `summarise()` to perform different operations depending on the values present in a row. In the example below, we add a new column called "size" which has the value "big" if the tree is in the top 10 by all measures, "medium" if it is in the top 10 by at least one measure, and "small" otherwise.
+
+```{r}
+ranked_trees |> 
+  mutate(
+    size = case_when(
+      if_all(contains("rank"), ~ . <= 10) ~ "big",
+      if_any(contains("rank"), ~ . <= 10) ~ "medium",
+      TRUE                                ~ "small"
     )
   )
 ```
