@@ -83,6 +83,7 @@ Initial Description and Link:
 * count()_vignette.Rmd
 
 Revision/Addition Description and Link:
+* Extended groupby_vingette.rmd to include an example of how to use the count() function (starting at line 77).
 
 
 # Kevin H.
