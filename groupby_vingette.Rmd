@@ -73,3 +73,10 @@ head(pool_by_bro_type)
 # Splitting it into a list of dataframes
 group_split(pool_by_bro_type)
 ```
+## Alternative Calculation of Group Totals using count()
+While grouping first, followed by summarize using n() is one way to calculate total observations or events in a subgroup, an alternate approach is to use the count() function. This function conveniently obviates the need to group first by simply naming the grouping arguments in the function. See the example code below and contrast with the earlier example in lines 40 - 42.
+
+```{r count}
+pools_df %>% count(borough,pooltype)
+
+```
