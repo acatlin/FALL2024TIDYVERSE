@@ -79,8 +79,8 @@ Revision/Addition Description and Link:
 # Keith R.
 
 Initial Description and Link:
--Using dplyr's count() function for calculating subtotals of observations in a group.
--count()_vignette.Rmd
+*Using dplyr's count() function for calculating subtotals of observations in a group.
+*count()_vignette.Rmd
 
 Revision/Addition Description and Link:
 
