@@ -1,0 +1,143 @@
+---
+title: "Create - Forcats"
+author: "Luis Munoz Grass"
+date: "2024-12-02"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Forcats
+
+This document will go over an example of the use of some functions from the forcats package (from tidyverse).
+More specifically we'll be demonstrating how to use:
+
+- fct_reorder(): Reordering a factor by another variable.
+- fct_relevel(): Changing the order of a factor by hand.
+
+The data used is obtained from fivethirtyeight:
+https://raw.githubusercontent.com/fivethirtyeight/data/refs/heads/master/police-locals/police-locals.csv
+
+Loading the data
+```{r loading data}
+police_city <- read_csv("https://raw.githubusercontent.com/fivethirtyeight/data/refs/heads/master/police-locals/police-locals.csv")
+glimpse(police_city)
+summary(police_city)
+```
+
+Load needed libraries:
+```{r tidy forcats}
+library(tidyverse)
+```
+
+### fct_reorder
+Now, we can use fct_reorder() to reorder a factor (e.g., city) by another variable (e.g., police_force_size).
+```{r fct_reorder}
+# Reordering cities by police force size
+police_city <- police_city %>%
+  mutate(city = fct_reorder(city, police_force_size))
+
+# Visualize the reordered factor
+ggplot(police_city, aes(x = city, y = police_force_size)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Cities Reordered by Police Force Size",
+    x = "City",
+    y = "Police Force Size"
+  )
+```
+In this case the function reorders the factor levels of city based on the corresponding values of police_force_size. This means it's more useful when  you want the plot to display values in ascending or descending order.
+
+However, this plot is not easy to read, so we can reduce the number of cities shown at the same time.
+
+```{r arrange 10 and 10}
+# Get top 10 cities by police force size
+top_10 <- police_city %>%
+  arrange(desc(police_force_size)) %>%
+  slice_head(n = 10)
+
+# Get bottom 10 cities by police force size
+bottom_10 <- police_city %>%
+  arrange(police_force_size) %>%
+  slice_head(n = 10)
+```
+
+```{r plot top 10}
+# Plot top 10 cities
+ggplot(top_10, aes(x = fct_reorder(city, police_force_size), y = police_force_size)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 Cities by Police Force Size",
+    x = "City",
+    y = "Police Force Size"
+  )
+```
+
+```{r plot bttom 10}
+# Plot bottom 10 cities
+ggplot(bottom_10, aes(x = fct_reorder(city, police_force_size), y = police_force_size)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Bottom 10 Cities by Police Force Size",
+    x = "City",
+    y = "Police Force Size"
+  )
+```
+
+
+### fct_relevel
+Now an example for fct_relevel that manually reorders specific factor levels (e.g., moving "New York" to the top)
+```{r fct_relevel}
+# Relevel specific cities to appear at the top
+police_city <- police_city %>%
+  mutate(city = fct_relevel(city, "New York", "Los Angeles", "Chicago"))
+
+# Check the levels to confirm
+levels(police_city$city)
+```
+
+In this case if we want to highlight specific cities of interest we can manually move them to the top of the list, regardless of their rank by police_force_size. This can be particularly useful if:
+You want to prioritize specific cities in your analysis (e.g., cities with high population or historical significance).
+You want to compare certain cities against others in the dataset, even if they are not in the top or bottom 10.
+
+```{r reordered}
+# Relevel the factor to move specific cities to the top
+police_city <- police_city %>%
+  mutate(city = fct_relevel(city, "New York", "Los Angeles", "Chicago"))
+
+# Plot the reordered data
+ggplot(police_city, aes(x = city, y = police_force_size)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Highlighted Cities Moved to the Top Using fct_relevel",
+    x = "City",
+    y = "Police Force Size"
+  )
+```
+
+Similar to the previous function, we can reduce the number of cities shown to better highlight the contrast between cities.
+
+```{r filtered reord}
+# Filter the top 10 cities based on police force size
+top_10 <- police_city %>%
+  arrange(desc(police_force_size)) %>%
+  slice_head(n = 10)
+
+# Plot the top 10 cities
+ggplot(top_10, aes(x = city, y = police_force_size)) +
+  geom_col(fill = "skyblue") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Cities with Highlighted Order",
+    x = "City",
+    y = "Police Force Size"
+  )
+```
+
+This demonstrates how fct_relevel() allows to manually prioritize key data points (specific cities) even when they don’t naturally fall at the top or bottom of the dataset. On its own is limited, but you can combine fct_relevel() with other TidyVerse functions like arrange() or calculated metrics, ensuring your data is both logical and visually compelling.

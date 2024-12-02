@@ -29,3 +29,54 @@ head(Consumption)
 ```
 
 Now we turned 28 columns into 3 using the Gather function.
+
+## Expanding on Gather with Separate - added by LMG 
+
+In this section, we demonstrate how to use the `separate()` function from `tidyr` to split a composite column into multiple columns. For example, if the `country` column contains both country names and regions (e.g., `"USA-NorthAmerica"`), we can split it into two separate columns.
+
+### Splitting the Country Column
+
+```{r separate}
+# Simulate composite column
+Consumption_raw <- Consumption_raw %>%
+  mutate(country = paste0(country, "-Region"))
+
+# Separate the composite column into two columns
+Consumption_split <- Consumption_raw %>%
+  separate(country, into = c("country_name", "region"), sep = "-")
+
+# View the first few rows of the updated data
+head(Consumption_split)
+```
+
+After splitting the column, we can apply the gather() function to reshape the data as before:
+
+```{r new gather}
+# Use gather on the updated data
+Consumption_final <- gather(Consumption_split, key = "year", value = "Meat_Consumption", 2:28)
+
+# View the first few rows of the final dataset
+head(Consumption_final)
+```
+
+Finally, we group the data by region to summarize average meat consumption:
+
+```{r summarize}
+# Summarize meat consumption by region
+Consumption_summary <- Consumption_final %>%
+  group_by(region) %>%
+  summarize(avg_meat_consumption = mean(Meat_Consumption, na.rm = TRUE))
+
+# View the summary
+print(Consumption_summary)
+```
+
+### **Explanation of New Functionality**
+
+1. **`separate()`**:
+   - Splits a single column into multiple columns based on a specified delimiter.
+   - Helps in preprocessing data when values in a single column encode multiple variables.
+
+2. **`mutate()`**:
+   - Used here to simulate a composite column if the original data lacks such values.
+   - Adds flexibility to the example.
