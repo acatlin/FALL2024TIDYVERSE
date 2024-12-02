@@ -32,7 +32,8 @@ Initial Description and Link:
 - [Here is a link to my github source](https://raw.githubusercontent.com/spacerome/TidyVerseCREATE/refs/heads/main/tidyverseCREATE.qmd)
 
 Revision/Addition Description and Link:
-
+- Added advanced text analysis techniques using Tidyverse for Alexander Wrubel
+- Extension is [here](Data607_tidyverseAW+extended.Rmd)
 
 # Benjamin W.
 
