@@ -141,11 +141,16 @@ Extending the work done by [Kevin H.](#kevin-h) on the `across()` function we ex
 [Check out the extension here!](across_vignette.Rmd)
 
 # Tenzin D.
+ My dataset is World happiness report.
+Initial Description and Link: Purrr is a popular R Programming package that provides a consistent and powerful set of tools for working with functions and vectors. (Tidyverse.Rmd)
+-Data filter and maping
+-Calculating the Average
+-Purrr map function
 
-Initial Description and Link:
-
-Revision/Addition Description and Link:
-
+Revision/Addition Description and Link:(TidyVerseExtend.Rmd)
+-GGPLOT
+-PLOTLY
+This visualization gave me many insights regarding the correlation between a country’s GDP per capita and their happiness.
 
 # Nwe M.
 
