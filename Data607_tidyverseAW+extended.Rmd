@@ -1,0 +1,257 @@
+---
+title: "Data607_tidyverseAW"
+author: "aw"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+For this vignette, I'll demonstrate how to use the `stringr` package in tidyverse to help clean and organize data for better analysis and readability. The dataset we'll be using is on perceptions surrounding masculinity. First, you'll need to import the data from my public github repo.
+
+```{r lib}
+library(tidyverse)
+
+#import the data raw responses
+masculinity <- read.csv("https://raw.githubusercontent.com/awrubes/advprog/main/raw-responses.csv")
+```
+
+## Pivoting to Long
+
+The current raw data is in a wide format. In order to make it easier to analyze we'll want to pivot into a long format. However, you'll notice that in order to pivot this data so that each row represents a single observation, one of the columns "Weight" is an integer datatype. We'll need to convert this value into character so that we can pivot the entire dataframe.
+
+```{r pivot}
+
+#remove unnecessary columns 2-3 cols
+masculinity_rev <- masculinity[, -c(2,3)]
+
+#convert weight to string so can be pivoted
+masc_weight <- masculinity_rev %>%
+  mutate(
+    weight = as.character(weight)
+  )
+
+#pivot into long format so each row contains one observation
+masc_long <- masc_weight %>%
+  pivot_longer(
+    cols = where(is.character),
+    names_to = "question",
+    values_to = "answer"
+  )
+
+```
+
+## Cleaning Data with Regex
+
+Now that we have our data in a long format, we can go through and systematically make the data easier to read and analyze by adjusting col names and values. We'll use important functions in the `stringr` package such as `str_detect`, `str_replace` to make the necessary changes.
+
+```{r clean}
+
+#remove any rows that contain "not selected" using str detect
+masc_long_up <- masc_long %>%
+ filter(!str_detect(answer, "Not selected"))
+
+#filter the data using string patterns
+filtered_openend <- masc_long_up %>% 
+  filter(str_detect(question, "^q0002"))
+
+#count number of occurrences
+result <- filtered_openend %>%
+  group_by(answer) %>%
+  summarize(count = n())
+
+print(result)
+
+#Add full questions for readability and to combine answers that are associated with different question name variables
+masc_long_new <- masc_long_up %>%
+  mutate(
+    question_full = question,
+    question_full = str_replace(question, "^q0001\\w*", "How masculine do you feel?"),
+    question_full = str_replace(question_full, "^q0002\\w*", "How important is masculinity to you?"),
+    question_full = str_replace(question_full, "^q0004\\w*", "Where have you gotten your ideas about what it means to be a good man?"),
+    question_full = str_replace(question_full, "^q0005\\w*", "Do you think that society puts pressure on men in a way that is unhealthy or bad for them?"),
+    question_full = str_replace(question_full, "^q0007\\w*", "How often would you say you do each of the following?"),
+    question_full = str_replace(question_full, "^q0008\\w*", "Which of the following do you worry about on a daily or near daily basis?"),
+    question_full = str_replace(question_full, "^q0009\\w*", "Which of the following categories best describes your employment status?"),
+    question_full = str_replace(question_full, "^q0010\\w*", "In which of the following ways would you say it’s an ​advantage​ to be a man at
+your work right now?"),
+    question_full = str_replace(question_full, "^q0011\\w*", "In which of the following ways would you say it’s a ​disadvantage​ to be a man at your work right now?"),
+    question_full = str_replace(question_full, "^q0012\\w*", "Have you seen or heard of a sexual harassment incident at your work? If so, how did you respond?"),
+    question_full = str_replace(question_full, "^q0013\\w*", "And which of the following is the main reason you did not respond?"),
+    question_full = str_replace(question_full, "^q0014\\w*", "How much have you heard about the #MeToo movement?"),
+    question_full = str_replace(question_full, "^q0015\\w*", "As a man, would you say you think about your behavior at work differently in the wake of #MeToo?"),
+    question_full = str_replace(question_full, "^q0017\\w*", "Do you typically feel as though you’re expected to make the first move in romantic
+relationships?"),
+    question_full = str_replace(question_full, "^q0018\\w*", "How often do you try to be the one who pays when on a date?"),
+    question_full = str_replace(question_full, "^q0019\\w*", "Which of the following are reasons why you try to pay when on a date? "),
+    question_full = str_replace(question_full, "^q0020\\w*", "When you want to be physically intimate with someone, how do you gauge their interest?"),
+    question_full = str_replace(question_full, "^q0021\\w*", "Over the past 12 months, when it comes to sexual boundaries, which of the following things have you done?"),
+    question_full = str_replace(question_full, "^q0022\\w*", "Have you changed your behavior in romantic relationships in the wake of #MeToo movement?"),
+    question_full = str_replace(question_full, "^q0024\\w*", "Are you now married, widowed, divorced, separated, or have you never
+been married?"),
+    question_full = str_replace(question_full, "^q0025\\w*", "Do you have any children?"),
+    question_full = str_replace(question_full, "^orientation\\w*", "Would you describe your sexual orientation as:"),
+    question_full = str_replace(question_full, "^q0026\\w*", "Would you describe your sexual orientation as:"),
+    question_full = str_replace(question_full, "^q0026\\w*", "Would you describe your sexual orientation as:"),
+    question_full = str_replace(question_full, "^race\\w*", "What is your race"),
+    question_full = str_replace(question_full, "^edu\\w*", "What is the last grade of school you completed?"),
+    question_full = str_replace(question_full, "^weight\\w*", "What is your weight (kg)?"),
+  )
+
+head(masc_long_new)
+
+```
+
+**-----Extend Begin -----**
+
+## Tidyverse Extended: Advanced Data Manipulation
+
+### Advanced Analysis: Sentiment Analysis on Open-Ended Responses
+
+In this section, we apply sentiment analysis on open-ended responses to understand the emotional tone of the participants' answers. We'll use the `tidytext` package for this purpose.
+
+```{r sentiment}
+
+# Load necessary library
+library(tidytext)
+
+# Filter open-ended questions
+open_ended_responses <- masc_long_new %>%
+  filter(str_detect(question_full, "How important is masculinity to you|Where have you gotten your ideas about what it means to be a good man"))
+
+# Tokenize responses into words
+tokenized_responses <- open_ended_responses %>%
+  unnest_tokens(word, answer)
+
+# Perform sentiment analysis using Bing lexicon
+sentiments <- tokenized_responses %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  count(question_full, sentiment, sort = TRUE) %>%
+  spread(sentiment, n, fill = 0)
+
+# Ensure columns exist before computing sentiment score
+sentiments <- sentiments %>%
+  mutate(
+    positive = ifelse("positive" %in% colnames(.), positive, 0),
+    negative = ifelse("negative" %in% colnames(.), negative, 0),
+    sentiment_score = positive - negative
+  )
+
+print(sentiments)
+
+```
+### Visualization: Most Frequent Words by Question
+
+We’ll visualize the most frequent words across open-ended questions.
+
+```{r visualization}
+library(stringr)
+
+# Ensure tokenized_responses exists
+# Count the most frequent words
+word_counts <- tokenized_responses %>%
+  count(question_full, word, sort = TRUE)
+
+# Filter the top 5 words per question
+top_words <- word_counts %>%
+  group_by(question_full) %>%
+  slice_max(n, n = 5)
+
+# Wrap long question labels
+top_words <- top_words %>%
+  mutate(question_full = str_wrap(question_full, width = 30))
+
+# Create the plot
+ggplot(top_words, aes(x = reorder(word, n), y = n, fill = question_full)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ question_full, scales = "free", ncol = 1) +  # Layout facets in one column
+  coord_flip() +
+  labs(title = "Most Frequent Words by Question",
+       x = "Words",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 10))  # Adjust facet label size
+
+
+```
+### Joining Demographics for Context
+
+To enhance the analysis, we’ll join demographic data (e.g., race, education) to the responses and analyze trends.
+
+```{r demographics}
+
+# Ensure demographics has the correct columns
+demographics <- masc_long_new %>%
+  filter(str_detect(question_full, "What is your race|What is the last grade of school you completed")) %>%
+  select(X, question_full, race = answer)  # Rename answer to race for clarity
+
+# Ensure unique keys in both datasets
+open_ended_responses <- open_ended_responses %>%
+  distinct(X, .keep_all = TRUE)
+
+demographics <- demographics %>%
+  distinct(X, .keep_all = TRUE)
+
+# Perform the join
+responses_with_demographics <- open_ended_responses %>%
+  left_join(demographics, by = "X")
+
+# Verify columns after the join
+colnames(responses_with_demographics)
+head(responses_with_demographics)
+
+# Group and summarize if `question_full` and `race` are present
+if ("question_full" %in% colnames(responses_with_demographics) &&
+    "race" %in% colnames(responses_with_demographics)) {
+  responses_with_demographics <- responses_with_demographics %>%
+    group_by(race, question_full) %>%
+    summarize(mean_sentiment = mean(sentiment_score, na.rm = TRUE), .groups = "drop")
+
+  print(responses_with_demographics)
+} else {
+  print("Required columns are missing. Check the input datasets.")
+}
+
+
+```
+
+### Advanced Cleaning: Removing Stop Words
+
+We can clean the data further by removing stop words to focus on meaningful terms in the analysis.
+
+```{r stop_words}
+# Remove stop words
+cleaned_responses <- tokenized_responses %>%
+  anti_join(stop_words, by = "word")
+
+# Count the most frequent words after removing stop words
+cleaned_word_counts <- cleaned_responses %>%
+  count(word, sort = TRUE)
+
+print(cleaned_word_counts)
+```
+
+## Explanation of the Extension
+
+### Objective
+
+This extension enhances text data analysis by applying advanced Tidyverse techniques. It includes sentiment analysis to quantify emotional tones, visualizations to identify key themes, and demographic integration to uncover trends across participant groups. Advanced cleaning, such as removing stop words, ensures meaningful terms are emphasized.
+
+### Key Insights
+
+1. **Sentiment Analysis**: Highlights emotional tones in responses using Bing lexicon and sentiment scores.
+2. **Visualization**: Displays frequent words by question, helping uncover dominant ideas.
+3. **Demographic Context**: Links responses to race and education for richer insights.
+4. **Enhanced Cleaning**: Focuses on relevant words by eliminating noise.
+
+This approach bridges raw survey data and actionable insights through robust data manipulation and visualization.
+
+**-----Extend End -----**
+
+## Conclusion
+
+This exercise demonstrates how powerful text manipulation can be in transforming raw data into a format that’s ready for meaningful analysis. Through leveraging `stringr` functions, we were able to standardize responses and enhance the interpretability of the data.
