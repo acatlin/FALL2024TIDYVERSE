@@ -113,10 +113,13 @@ Revision/Addition Description and Link:
 
 # Luis M.
 
-Initial Description and Link:
+Initial Description and Link: For the CREATE assignment, I provided an example of the use of some functions from the forcats package:
+- fct_reorder(): Reordering a factor by another variable.
+- fct_relevel(): Changing the order of a factor by hand.
+[Link](https://github.com/acatlin/FALL2024TIDYVERSE/blob/main/607_LMG_create_forcats.Rmd)
 
-Revision/Addition Description and Link:
-
+Revision/Addition Description and Link: For the EXTEND assignment, I chose gather() by Ben W to include an explanation of separate () and mutate()
+[Link](https://github.com/Lfirenzeg/FALL2024TIDYVERSE/blob/main/BW_Gather.Rmd)
 # Matthew T.
 
 Exploring how to work with nested data using `unnest()`
