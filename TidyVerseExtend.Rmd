@@ -1,0 +1,169 @@
+---
+title: "TidyVerseExtend"
+author: "Tenzin"
+date: "2024-12-02"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(tidyverse)
+library(reactable)
+library(purrr)
+```
+
+## TidyVerse EXTEND Assignment
+
+
+### Instructions
+In this assignment, you’ll practice collaborating around a code project with GitHub.  You could consider our collective work as building out a book of examples on how to use TidyVerse functions.
+
+GitHub repository: https://github.com/acatlin/FALL2024TIDYVERSE
+
+**FiveThirtyEight.com datasets**
+
+**Kaggle datasets** 
+
+Your task here is to Extend an Existing Example.  Using one of your classmate’s examples (as created above), extend his or her example with additional annotated code. (15 points)
+
+You should clone the provided repository.  Once you have code to submit, you should make a pull request on the shared repository.  You should also update the README.md file with your example.
+
+After you’ve extended your classmate's vignette, please submit your GitHub handle name in the submission link provided below.  This will let your instructor know that your work is ready to be peer-graded.
+
+You should complete your submission on the schedule stated in the course syllabus.
+
+### Data Import
+This step below I will be importing the world happiness dataset from my github account URL:
+
+```{r}
+worldhappiness <- read.csv(file = "https://raw.githubusercontent.com/tenzinda97/TidyVerse/refs/heads/main/world-happiness-report.csv")
+```
+
+### Data filter and maping
+First I will filter the data for a specific year.
+
+```{r}
+worldhappiness2020 <- worldhappiness %>% 
+  filter( year == '2020')
+```
+I filter the data for year 2020, which mean I will looking at information equivalent that year only.
+
+### Calculating the Average
+For this step I will calculate the average life expectancy at birth for the year 2020
+
+```{r}
+mean(worldhappiness2020$Healthy.life.expectancy.at.birth, na.rm = TRUE)
+```
+Purrr map function
+Now I will be using the mapping function from the purrr package on world hapiness dataset using the year filter 2020, I will be looking at healthy life expectancy at birth.
+
+```{r}
+worldhappiness2020$Healthy.life.expectancy.at.birth %>% map_dbl(mean)
+```
+
+For this step I am using the same map function and extended it to multiple columns.
+
+```{r}
+worldhappiness %>% 
+  select( "Healthy.life.expectancy.at.birth", "Freedom.to.make.life.choices" ) %>% 
+  map(~mean(.,na.rm = TRUE))
+```
+### Exploring map function futher more
+
+Below I will use the map function a bit more. I will split the original data frame by year, and run a linear model on each year. I then apply the summary function the results from each model and then again use the map function to obtain the r.squared value for each year.
+
+```{r}
+worldhappiness %>%  
+  split(.$year) %>% 
+  map(~lm( `Healthy.life.expectancy.at.birth` ~`Log.GDP.per.capita`  , data = .) ) %>% 
+  map(summary) %>% 
+  map_df("r.squared") %>% 
+  
+  reactable()
+```
+### Conclusion
+From the purrr package in the tidyverse I use the map function to show how to manipulate vector.
+### Extension:
+```{r}
+library(tidyverse)
+library(plotly)
+```
+This code sparked my interest in many different dynamics regarding the people of the world and their happiness. I wanted to create visualizations to bring these ideas to life and understand how different dynamics may correlate and what conclusions can be drawn from such correlations.
+
+I first wondered what was the different life expectancy’s of the people around the world and what was the ranges and the amount of countries in such ranges. To obtain such result I decided to utilize the TidyVerse package by using ‘GGPLOT’ to create a density plot of life expectancy in the most recent year of data we have which is 2020.
+```{r}
+density_plot_2020 <- ggplot(worldhappiness2020, aes(x = Healthy.life.expectancy.at.birth)) +
+geom_density(fill = "green", alpha = 0.5) + 
+labs(title = "Density Plot of Life Expectancy in 2020",
+  x = "Life Expectancy at Birth",
+  y = "Density")
+
+density_plot_2020
+```
+Using visualization, I observed that most countries have a life expectancy at birth ranging from 65 to 72 years, with 68 being the most common. This insight highlights global trends in life expectancy.
+
+To delve deeper, I explored the correlation between GDP per capita and Happiness scores. Initially, I focused on 2020 data but wanted to examine consistency across years. To achieve this, I created an interactive visualization using the `plotly` package, allowing year-by-year comparisons of these relationships.
+
+```{r}
+Happiness_vs_GDP_Plot <- plot_ly(worldhappiness, x = ~Log.GDP.per.capita, y = ~Life.Ladder, color = ~as.factor(year), type = "scatter", mode = "markers") %>%
+  layout(title = "Happiness Score vs. GDP per Capita (All Years)",
+         xaxis = list(title = "Log GDP per Capita"),
+         yaxis = list(title = "Happiness Score"),
+         colorway = c("#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A", "#19D3F3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"),
+         hovermode = "closest",
+         updatemenus = list(
+           list(
+             buttons = list(
+               list(method = "restyle",
+                    args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+                    label = "All"),
+               list(method = "restyle",
+                    args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+                    label = "2005"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+                    label = "2006"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+                    label = "2007"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+                    label = "2008"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+                    label = "2009"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+                    label = "2010"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+                    label = "2011"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+                    label = "2012"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+                    label = "2013"),
+               list(method = "restyle",
+                    args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+                    label = "2014")
+             ),
+             direction = "down",
+             showactive = TRUE,
+             x = 0.1,
+             xanchor = "left",
+             y = 1.1,
+             yanchor = "top"
+           )
+         )
+  )
+
+Happiness_vs_GDP_Plot
+```
+### Conclusion
+
+
+The visualization revealed a clear positive correlation between GDP per capita and Happiness scores, with scatter plots consistently skewed to the left, showing that higher GDP per capita is associated with greater happiness. Comparing data from 2010 and 2020 reinforced this trend. I used `ggplot2` to create the initial plots and enhanced them with `plotly` for interactivity.
+
+

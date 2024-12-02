@@ -1,0 +1,77 @@
+---
+title: "Tidyverse Assignment"
+author: "Tenzin"
+date: "2024-12-02"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(dplyr)
+library(purrr)
+library(tidyverse)
+library(reactable)
+```
+
+## Week 11 Tidyverse Assignment
+
+### Introduction  
+
+For this Tidyverse assignment, we were tasked with selecting a dataset from either FiveThirtyEight.com or Kaggle and using a Tidyverse package to create a vignette. I chose the **World Happiness Report** dataset, sourced from Kaggle, as the basis for my analysis.
+
+
+
+### What is the `purrr` Package?  
+
+`purrr` is a key package in R's Tidyverse, designed to simplify working with functions and vectors. Created by Hadley Wickham, it provides tools for functional programming, making your code more concise and readable. One of its standout features is the family of `map()` functions, which streamline tasks that would otherwise require complex loops. This package is particularly useful for iteration and applying functions consistently across elements of a list or vector. To learn more, the **R for Data Science** book offers an excellent introduction in its Iteration chapter.
+
+### Data Import
+This step below I will be importing the world happiness dataset from my github account URL: (https://github.com/tenzinda97/TidyVerse/blob/main/world-happiness-report.csv.)
+
+```{r }
+worldhappiness <- read.csv(file = "https://raw.githubusercontent.com/tenzinda97/TidyVerse/refs/heads/main/world-happiness-report.csv")
+```
+
+### Data filter and maping
+First I will filter the data for a specific year.
+
+```{r}
+worldhappiness2020 <- worldhappiness %>% 
+  filter( year == '2020')
+```
+I filter the data for year 2020, which mean I will looking at information equivalent that year only.
+
+### Calculating the Average
+For this step I will calculate the average life expectancy at birth for the year 2020
+
+```{r}
+mean(worldhappiness2020$Healthy.life.expectancy.at.birth, na.rm = TRUE)
+```
+### Purrr map function
+Now I will be using the mapping function from the purrr package on world hapiness dataset using the year filter 2020, I will be looking at healthy life expectancy at birth.
+
+```{r}
+worldhappiness2020$Healthy.life.expectancy.at.birth %>% map_dbl(mean)
+
+```
+### For this step I am using the same map function and extended it to multiple columns.
+```{r}
+worldhappiness %>% 
+  select( "Healthy.life.expectancy.at.birth", "Freedom.to.make.life.choices" ) %>% 
+  map(~mean(.,na.rm = TRUE))
+```
+
+### Exploring map function further more
+Below I will use the map function a bit more. I will split the original data frame by year, and run a linear model on each year. I then apply the summary function the results from each model and then again use the map function to obtain the r.squared value for each year.
+
+```{r}
+worldhappiness %>%  
+  split(.$year) %>% 
+  map(~lm( `Healthy.life.expectancy.at.birth` ~`Log.GDP.per.capita`  , data = .) ) %>% 
+  map(summary) %>% 
+  map_df("r.squared") %>% 
+  
+  reactable()
+```
+
