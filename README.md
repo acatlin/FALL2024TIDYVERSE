@@ -112,7 +112,9 @@ Initial Description and Link:
 - DATA_607_Koon_Tidyverse_Create.Rmd
 
 Revision/Addition Description and Link:
-
+- Extended Zach R's ggplot vignette, Data607TidyVerse.Rmd
+- Found the dataset on fivethirtyeight and edited the dataset loading to point to a publicly available path
+- Demonstrated the use of scale_color_manual() to map colors to the data in ggplot
 
 # Luis M.
 

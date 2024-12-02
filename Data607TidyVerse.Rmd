@@ -12,13 +12,16 @@ In this vignette I used dplyr for data wrangling, ggplot2 for visualization, and
 
 ## Load Libraries and Dataset
 ```{r}
-library(ggplot2)
+# library(ggplot2) # TIDYVERSE EXTEND (Kim) - removed ggplot2 as it is included in tidyverse
 library(tidyverse)
 library(knitr) # For kable
 
 # Loads polling dataset from FiveThirtyEight
-file_path <- "C:/Users/poiso/Downloads/president_polls.csv"
-polls_data <- read_csv(file_path)
+# file_path <- "C:/Users/poiso/Downloads/president_polls.csv" # TIDYVERSE EXTEND (Kim) removed as it prevents knitting 
+# polls_data <- read_csv(file_path) # TIDYVERSE EXTEND (Kim) removed as it prevents knitting 
+
+# TIDYVERSE EXTEND (Kim) - add file link from publicly available source
+polls_data <- read.csv("https://raw.githubusercontent.com/koonkimb/Data607/refs/heads/main/TidyVerse%20EXTEND/president_polls.csv", header = TRUE, sep = ",")
 ```
 
 
@@ -68,3 +71,61 @@ ggplot(monthly_summary, aes(x = month_date, y = avg_pct)) +
 ```
 
 Using TidyVerse and kable I analyzed and created a visualization for data related to Donald Trumps polling numbers over the past several years. It can be seen that his polling numbers move significantly over time, with an upward trend appearing to take place when the data reaches it's most current state. The use of dplyr created efficient data manipulation, while kable and ggplot2 enhanced the presentation of results.I chose this data set due to my own interest into where Donald Trump was polling over the past several years, as the recent election results had come as a surprise to myself. With the democratic party polling data being in regards to Joe Biden, I also felt it more appropriate to focus solely on Trump. 
+
+## Tidyverse Extend (Kim)
+
+To extend this vignette, I wanted to include the use of scale_color_manual() to map specified aesthetic values to the data to help visualization.  To do this, I first found the data from fivethirtyeight and placed it in a publicly available github repository (above) so that this file can be run from any computer.  
+
+```{r}
+polls_Siena_NYT <- polls_data %>%
+  mutate(
+    start_date = as.Date(start_date, format = "%m/%d/%y"), # Convert start_date to Date
+    pct = as.numeric(pct)                                 # Ensure pct is numeric
+  ) %>%
+  filter(!is.na(start_date), !is.na(pct), pollster == "Siena/NYT") # Remove rows with missing dates or percentages
+```
+
+```{r}
+# Summarizes polling trends for Donald Trump by month
+monthly_summary_extend <- polls_Siena_NYT %>%
+  mutate(month = format(start_date, "%Y-%m")) %>%
+  group_by(candidate_name,month) %>%
+  summarize(
+    avg_pct = mean(pct, na.rm = TRUE)
+  ) %>%
+  mutate(month_date = as.Date(paste0(month, "-01"))) %>%
+  arrange(month_date)
+
+monthly_summary_extend %>% distinct(candidate_name)
+```
+
+```{r}
+candidate_colors <- c(
+  "Donald Trump" = "#8AB17D", 
+  "Joe Biden" = "#4A7A8C", 
+  "Kamala Harris" = "#E7B16C", 
+  "Nikki Haley" = "#D9421C", 
+  "Ron DeSantis" = "#E9C46A", 
+  "Robert F. Kennedy" = "#BABB74", 
+  "Cornel West" = "#F4A261", 
+  "Jill Stein" = "#E76F51", 
+  "Lars Mapstead" = "#264653", 
+  "Chase Oliver" = "#2A9D8F"
+) 
+
+# Creates visualization for the data using ggplot
+ggplot(monthly_summary_extend, aes(x = month_date, y = avg_pct, color = candidate_name)) +
+  geom_line(size = 1) +
+  scale_color_manual(
+  name = "Candidates",
+  values = candidate_colors) + 
+  labs(
+    title = "Siena/NYT Polling Trend Over Time",
+    x = "Month",
+    y = "Average Favorability Percentage"
+  )
+```
+
+### Conclusion
+
+I focused mainly on one poll source, Siena/NYT, rather than averaging polling percentages across multiple sources.  The resulting data contains ten candidates, which each can be mapped to a color (done via "candidate_colors").  Afterwards, scale_color_manual() can be used in conjunction with ggplot to plot the candidate using the specified colors.  This allows more flexibility with color visualization when using ggplot, as the default colors may not be distinct enough for clear differentiation of categories (in this case, candidates).
