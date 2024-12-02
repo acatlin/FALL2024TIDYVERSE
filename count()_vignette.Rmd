@@ -1,0 +1,47 @@
+---
+title: "Tidyverse_create_assignment"
+author: "Keith Rafferty"
+date: "2024-11-30"
+output: html_document
+---
+### Example: Using dplyr's count() function
+
+It is often useful to count the number of observations or events of a particular group. Fortunately, dplyr has a convenient function, count(), to quickly and easily perform count calculations. Below is a simple example of the basic use of this function with some survey data on Thanksgiving meals.
+
+First we import our data and then alter the name of column of interest for simplicity, as well as simplifying some of the answers.
+
+### Basic Functionality with count()
+
+To attain counts for a particular feature, first pass the data frame via a pipe to the count() function, then specify the feature or features for which to perform the counting calculation. In the example below, we'll perform a count upon the main_course feature, which captures the main course for the Thanksgiving meal of respondents.
+
+### Specifying the name of the output column
+By default, the counts will fall under a column named 'n', but this column name can be customized by using the "name" argument. In the second example below, the counts are now being captured in a column named "count". 
+
+### Using the sort argument to put the counts in descending order
+By setting the 'sort' argument to TRUE, the resulting counts will be shown in descending order, which is helpful to quickly see the main courses with the greatest number of responses. To no surprise, most people are featuring turkey in their Thanksgiving meals (third example).
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library('RCurl')
+library(knitr)
+
+turkeyday_data <- getURL('https://raw.githubusercontent.com/fivethirtyeight/data/refs/heads/master/thanksgiving-2015/thanksgiving-2015-poll-data.csv')
+df_turkey <- read.csv(text = turkeyday_data)
+
+colnames(df_turkey)[3] <- "main_course"
+df_turkey[df_turkey==''] <- 'no response'
+df_turkey[df_turkey=='Other (please specify)'] <- 'other'
+
+df_turkey |>
+  count(main_course)
+
+df_turkey |>
+  count(main_course, name = 'count')
+
+df_turkey |>
+  count(main_course, name = 'count', sort = TRUE)
+
+
+```
